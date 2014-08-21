@@ -22,7 +22,7 @@ push.bit:
 	@echo hg push https://trbauer:[password]@bitbucket.org/trbauer/stquery
 	@echo hg push ssh://hg@bitbucket.org/trbauer/stquery
 
-push.bit:
-	@echo hg push origin
+push.git:
+	@echo git push origin
 	
 
