@@ -2,7 +2,7 @@ default: exes
 
 help:
 	echo targets are:
-	echo exes, install, clean, push.bit
+	echo exes, install, clean, push.bit, push.git
 
 exes: stquery.exe
 
@@ -21,3 +21,8 @@ clean:
 push.bit:
 	@echo hg push https://trbauer:[password]@bitbucket.org/trbauer/stquery
 	@echo hg push ssh://hg@bitbucket.org/trbauer/stquery
+
+push.bit:
+	@echo hg push origin
+	
+
