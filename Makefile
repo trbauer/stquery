@@ -23,6 +23,6 @@ push.bit:
 	@echo hg push ssh://hg@bitbucket.org/trbauer/stquery
 
 push.git:
-	@echo git push origin
+	@git push origin
 	
 
