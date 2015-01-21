@@ -72,27 +72,6 @@ mIN_FRACTIONS = 6 :: Int
 putErrLn msg = hPutStrLnANSI stderr (aNSI_RED ++ msg ++ aNSI_RESET)
 fatal msg = putErrLn msg >> exitFailure
 
-test :: IO ()
-test = testParseStatExpr >> testEvalStatExpr >> return ()
-
-q = (\is -> q_pfx ++ ":" ++ intercalate "," (map show is) ++ ":" ++ q_sfx) :: [Int] -> String
-q_pfx = "dat/*/*/s$simd*/rgba_to_intensity/4096_4096/$gx*_$gy*/2_1/dat"
-q_sfx = "len(#1),@gx*@gy/@simd,1024*avg(#1)/min(#1),1024*med(#1)"
--- full table (default columns)
-q1 = q_pfx ++ ":" ++ q_sfx
--- empty merges everything
-q2 = q_pfx ++ "::len(#1),1024*avg(#1)/min(#1),1024*med(#1)"
--- permutes
-q3 = q [5,4,1,3,2]
--- projects
-q4 = q [5,4,3,2]
--- projects more
-q5 = q_pfx ++ ":2:len(#1),1024*avg(#1)/min(#1),1024*med(#1)"
--- err (index out of bounds
-q6 = q [4,3,2,6]
--- err (index out of bounds
-q7 = q [4,3,-2]
-
 runStr :: Verbosity -> String -> IO ()
 runStr verbose str = do
   whenVerbose verbose $
@@ -105,7 +84,7 @@ runStr verbose str = do
     _ -> putErrLn $ "malformed query string: " ++ str
 
 runStrs :: Verbosity -> Maybe [Int] -> String -> String -> IO ()
-runStrs verbose mis gstr estr = do
+runStrs verbose mis gstr estr =
   case (parseGlob gstr, parseStatExprs estr) of
     (Left e, _) -> putErrLn $ "malformed glob expression: " ++ e
     (_, Left e) -> putErrLn $ "malformed stat column expression: " ++ e
@@ -115,15 +94,14 @@ runStrs verbose mis gstr estr = do
       --  putStrLn $ "  " ++ show mis
       --  putStrLn $ "  " ++ show es
       fs <- expandGlobPath g "."
-      if null fs then do
-        putErrLn $ "no glob matches (try -l)"
+      if null fs then putErrLn "no glob matches (try -l)"
 --        part <- walkPartialGlobPath "." g
 --        hPutStrLn stderr $ part
         else do
           let nvars = length (map fst (fst (head fs)))
           case mis of
             Nothing -> readAndPrintTable verbose [1 .. nvars] fs es
-            Just is -> do let oob = filter ((\i -> i > nvars || i < 1)) is
+            Just is -> do let oob = filter (\i -> i > nvars || i < 1) is
                           if not (null oob) then putErrLn $ "projection index(ices) are out of bounds: " ++ show oob
                             else readAndPrintTable verbose is fs es
 
@@ -166,11 +144,11 @@ mkErrorRow :: [(String,String)] -> String -> ([(String,String)],Row a)
 mkErrorRow vs err = (vs, Left err)
 
 readTable :: [(VarDefs,FilePath)] -> IO (Table [[CellVal]])
-readTable fs = do
+readTable fs =
   forM fs $ \(defs,fp) -> do
       let returnErrRow e = return (defs, Left (fp ++ ": " ++ e))
       is_dir <- doesDirectoryExist fp
-      if is_dir then returnErrRow ("is a directory")
+      if is_dir then returnErrRow "is a directory"
         else do
           fstr <- readFile fp
           length fstr `seq` return ()
@@ -228,7 +206,7 @@ evaluateTable es = map evalRow
                 env var = do
                   val <- lookup var vs
                   case reads val :: [(Double,String)] of
-                    [(d,"")] -> return $! (StatSca d)
+                    [(d,"")] -> return $! StatSca d
                     _ -> fail "no bindings"
 
         evalCells :: [[CellVal]] -> Env -> [Either String Double]
@@ -237,7 +215,7 @@ evaluateTable es = map evalRow
         evalCell :: [[CellVal]] -> Env -> StatExpr -> Either String Double
         evalCell cs env e = case evalStatExpr cs env e of
                               StatSca v   -> Right v
-                              StatVec _   -> Left $ "evaluates to a vector"
+                              StatVec _   -> Left "evaluates to a vector"
                               StatErr c e -> Left (show c ++ ". " ++ e)
 
 formatTable :: Verbosity -> [StatExpr] -> Table [Either String Double] -> String
@@ -254,7 +232,7 @@ formatTable verbosity es tbl = aNSI_WHI ++ header_row ++ data_rows ++ aNSI_RESET
 
         ks_len = map (\k -> max (length k) (maxlen k)) ks
 
-        ks_fmts :: [(String -> String)]
+        ks_fmts :: [String -> String]
         ks_fmts = map (\w s -> printf ("%" ++ show w ++ "s") s) ks_len
 
         ks_header = intercalate "  " (zipWith ($) ks_fmts ks)
@@ -272,7 +250,7 @@ formatTable verbosity es tbl = aNSI_WHI ++ header_row ++ data_rows ++ aNSI_RESET
         --          vs (Right (_,_,v)) = [v]
         -- TODO: infer float width specifier (precision)
         v_fmts :: [Either String Double -> String]
-        v_fmts = map (\vs -> fmt (length vs)) v_strs
+        v_fmts = map (fmt . length) v_strs
           where fmt :: Int -> Either String Double -> String
                 -- fmt len (Left err) = printf ("%" ++ show len ++ "s") err
                 -- fmt len (Right d) = printf ("%" ++ show len ++ ".5f") d
@@ -293,7 +271,7 @@ formatTable verbosity es tbl = aNSI_WHI ++ header_row ++ data_rows ++ aNSI_RESET
                                (Left _) -> ""
                  warning_lines
                   | verbosity == VerbNone = ""
-                  | otherwise = onRight $ \ws _ -> aNSI_YEL ++ concatMap (++"\n") ws ++ aNSI_WHI
+                  | otherwise = onRight $ \ws _ -> aNSI_YEL ++ unlines ws ++ aNSI_WHI
                  verbose_lines
                   | verbosity == VerbNone = ""
                   | otherwise = onRight $ \_ fs -> aNSI_DK_WHI ++ concatMap ppFile fs ++ aNSI_WHI

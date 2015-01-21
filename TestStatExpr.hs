@@ -19,6 +19,28 @@ import Text.Parsec.Token
 import Text.Parsec.Language
 import Data.Functor.Identity
 
+test :: IO ()
+test = testParseStatExpr >> testEvalStatExpr >> return ()
+
+q = (\is -> q_pfx ++ ":" ++ intercalate "," (map show is) ++ ":" ++ q_sfx) :: [Int] -> String
+q_pfx = "dat/*/*/s$simd*/rgba_to_intensity/4096_4096/$gx*_$gy*/2_1/dat"
+q_sfx = "len(#1),@gx*@gy/@simd,1024*avg(#1)/min(#1),1024*med(#1)"
+-- full table (default columns)
+q1 = q_pfx ++ ":" ++ q_sfx
+-- empty merges everything
+q2 = q_pfx ++ "::len(#1),1024*avg(#1)/min(#1),1024*med(#1)"
+-- permutes
+q3 = q [5,4,1,3,2]
+-- projects
+q4 = q [5,4,3,2]
+-- projects more
+q5 = q_pfx ++ ":2:len(#1),1024*avg(#1)/min(#1),1024*med(#1)"
+-- err (index out of bounds
+q6 = q [4,3,2,6]
+-- err (index out of bounds
+q7 = q [4,3,-2]
+
+
 testP :: Show a => Parser a -> String -> IO ()
 testP p inp = case parse (p <* eof) "" inp of
              { Left err -> print err
