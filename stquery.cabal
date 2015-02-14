@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                stquery
-version:             0.1.0.0
+version:             1.0.0.0
 synopsis:            Allows one to write complex statistical queries of data files in a big directory structure via glob expressions
 -- description:
 license:             MIT

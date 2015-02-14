@@ -9,12 +9,8 @@ import System.Exit
 import System.FilePath
 import System.IO
 
-import StatQuery
-
--- The version table
---   * 1.0.1 added version
---   * 1.0.2 added -l option
-vERSION = "1.0.2"
+import Stats.Query
+import Stats.Version
 
 main = do
   opts <- getArgs >>= parseArgs defaultOpts
@@ -91,7 +87,7 @@ parseArgs opts ("-v":as) = parseArgs (opts{oVerbose = VerbSome}) as
 parseArgs opts ("-V":as) = parseArgs (opts{oVerbose = VerbAll}) as
 parseArgs opts ("-h":as) = parseArgs (opts{oHelp = True}) as
 parseArgs opts ("-l":as) = parseArgs (opts{oListTree = True}) as
-parseArgs opts ("--version":as) = putStrLn vERSION >> exitSuccess
+parseArgs opts ("--version":as) = putStrLn (vERSION ++ "(" ++ vERSION_DATE ++ ")") >> exitSuccess
 parseArgs opts (o@('-':_):as) = fatal $ "unrecognized option: " ++ o ++ "\n" ++ usage
 parseArgs opts (a:as) =  parseArgs (opts{oQueries = oQueries opts ++ [a]}) as
 
