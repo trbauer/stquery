@@ -1,0 +1,9 @@
+stquery: should sort rows by number if all numeric:
+C:\files\trbauer-desk\AVC\Users\trbauer\cl\thrdreuse\bwstudies\BWTest\sav\gt3\ci-main-22893\dat\bdw.gt3\dft>stquery "s32/*/*/16_16/*_1/dat:med(#0/#1),med(#5)"
+                1          2   3 |  med(#0/#1)      med(#5)
+         add_f_00  1024_1024  16 |    0.924127     5.931000
+                               1 |    0.993421     6.382000
+                               2 |    0.965742     6.245000
+                               4 |    0.965079     6.199000
+                               ....
+Sort by label 3 here
